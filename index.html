@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bulk Quiz Arena</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top left, #0b1220, #071223);
+      color: #e6eef8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      perspective: 1000px;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1000px;
+      transform-style: preserve-3d;
+      transform: rotateY(0deg);
+      transition: transform 0.6s;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #6ee7b7, #60a5fa);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 700;
+      color: #022;
+      font-size: 28px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, #0f1724, #071224);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.04);
+      transform: translateZ(0);
+    }
+
+    .question {
+      margin-bottom: 20px;
+      padding: 18px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed rgba(255,255,255,0.03);
+      transition: transform 0.3s;
+    }
+
+    .question:hover {
+      transform: scale(1.03) rotateX(2deg) rotateY(2deg);
+    }
+
+    .qtext {
+      margin-bottom: 12px;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option {
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      cursor: pointer;
+      transition: all 0.3s;
+      background: rgba(255,255,255,0.01);
+    }
+
+    .option:hover {
+      border-color: #6ee7b7;
+      background: rgba(110,231,183,0.05);
+    }
+
+    .option.selected {
+      outline: 2px solid rgba(110,231,183,0.18);
+      background: linear-gradient(90deg, rgba(110,231,183,0.03), transparent);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 24px;
+      align-items: center;
+    }
+
+    button {
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    button.primary {
+      background: linear-gradient(90deg, #6ee7b7, #60a5fa);
+      color: #022;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    #result {
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(110,231,183,0.1), rgba(96,165,250,0.05));
+      font-weight: 700;
+      font-size: 18px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">B</div>
+      <h1>Bulk Quiz Arena</h1>
+    </header>
+
+    <div class="card" id="quizContainer">
+      <div id="quizArea"></div>
+      <div class="controls">
+        <button id="prevBtn">← Previous</button>
+        <button class="primary" id="nextBtn">Next →</button>
+      </div>
+      <div class="controls">
+        <button id="restartBtn">Restart Quiz</button>
+        <button id="shareBtn">Share Score</button>
+      </div>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <audio id="correctSound" src="https://www.soundjay.com/button/beep-07.mp3"></audio>
+
+  <script>
+    const quizData = [
+      {q:'What is Bulk Trade primarily focused on?', opts:['NFTs','On-chain high-performance trading','GameFi','Lending'], a:1},
+      {q:'What does Alphanet mean?', opts:['Mainnet','Test Network','Token name','API system'], a:1},
+      {q:'Which consensus style does Bulk claim?', opts:['PoS','Leaderless consensus','PoW','PBFT'], a:1},
+      {q:'How many quiz questions?', opts:['5','10','15','20'], a:1},
+      {q:'Which role is awarded for meaningful contribution?', opts:['OG','Contributor','Testnet','None'], a:1},
+      {q:'Which type of content is discouraged?', opts:['Organic','AI/Spam','Feedback','Riddles'], a:1},
+      {q:'Riddles in quiz?', opts:['2','3','5','10'], a:2},
+      {q:'Bulk uses which network for testing?', opts:['Mainnet','Alphanet','Devnet','Testcoin'], a:1},
+      {q:'Leaderboard shows?', opts:['Random','Top scorers','Spam','AI content'], a:1},
+      {q:'What does contributor role require?', opts:['AI posts','Spamming','Meaningful content','No activity'], a:2},
+      // 5 riddles
+      {q:'I move faster than light but never leave the chain, what am I?', opts:['Bulk Engine','Lightning','Token','Oracle'], a:0},
+      {q:'I liquidate traders when prices drop, who am I?', opts:['Oracle','Liquidation mechanism','Wallet','Fee system'], a:1},
+      {q:'No sequencer rules my reign yet orders find their chain?', opts:['Leaderless consensus','PoS','Smart contract','Blockchain'], a:0},
+      {q:'I give you score at end and rank, what am I?', opts:['Quiz System','GameFi','Riddle','Token'], a:0},
+      {q:'I am shared to community to show your achievement, what am I?', opts:['Share Button','Tweet','Discord','Leaderboard'], a:0},
+    ];
+
+    let current = 0;
+    const answers = new Array(quizData.length).fill(null);
+
+    const quizArea = document.getElementById('quizArea');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const shareBtn = document.getElementById('shareBtn');
+    const resultDiv = document.getElementById('result');
+    const correctSound = document.getElementById('correctSound');
+
+    function showQuestion() {
+      const data = quizData[current];
+      quizArea.innerHTML = `<div class='question'><div class='qtext'>${data.q}</div><div class='options'>${data.opts.map((o,i)=>`<div class='option' data-id='${i}'>${o}</div>`).join('')}</div></div>`;
+      document.querySelectorAll('.option').forEach(el=>{
+        el.addEventListener('click',()=>{
+          answers[current]=parseInt(el.dataset.id);
+          document.querySelectorAll('.option').forEach(opt=>opt.classList.remove('selected'));
+          el.classList.add('selected');
+          if(parseInt(el.dataset.id)===data.a){
+            correctSound.play();
+          }
+        });
+      });
+    }
+
+    prevBtn.addEventListener('click',()=>{ if(current>0){ current--; showQuestion(); }});
+    nextBtn.addEventListener('click',()=>{
+      if(current<quizData.length-1){ current++; showQuestion(); } else { showResult(); }
+    });
+
+    restartBtn.addEventListener('click',()=>{ current=0; answers.fill(null); resultDiv.innerHTML=''; showQuestion(); });
+
+    shareBtn.addEventListener('click',()=>{
+      const score = answers.reduce((acc,val,i)=> acc + (val===quizData[i].a?1:0),0);
+      const msg = `I scored ${score}/${quizData.length} on the Bulk Quiz Arena! Are you ready to try?`;
+      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}`;
+      window.open(url,'_blank');
+    });
+
+    function showResult(){
+      const score = answers.reduce((acc,val,i)=> acc + (val===quizData[i].a?1:0),0);
+      let rank='Novice';
+      if(score>=13) rank='Bulk Contributor 💎';
+      else if(score>=10) rank='Rising Trader';
+      else rank='Learner';
+      resultDiv.innerHTML=`Your Score: ${score}/${quizData.length}<br>Rank: ${rank}`;
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
